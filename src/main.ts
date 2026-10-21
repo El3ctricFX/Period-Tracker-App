@@ -439,6 +439,7 @@ function updateUI(): void {
     FOLLICULAR: [avgD, avgC - 14],
     OVULATORY: [avgC - 14, avgC - 10],
     LUTEAL: [avgC - 10, avgC],
+    LATE: [avgC, avgC + 5],
     NEXT: [avgC, avgC + 5],
   };
   const [phStart, phEnd] = phaseBounds[activeKey] || [0, 1];
