@@ -76,6 +76,7 @@ Because everything is stored in your browser's **local storage**, your cycles wi
 
 - Cloudflare Pages: [https://perioddtracker.pages.dev/](https://perioddtracker.pages.dev/)
 - GitHub mirror: [https://el3ctricfx.github.io/Period-Tracker/](https://el3ctricfx.github.io/Period-Tracker/)
+- App Version: [Period-Tracker-App](https://github.com/El3ctricFX/Period-Tracker-App)
 
 ---
 
