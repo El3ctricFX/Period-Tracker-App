@@ -4,7 +4,7 @@ import type { CycleLog } from './types';
 
 export async function exportData(logs: CycleLog[]): Promise<void> {
   const path = await save({
-    defaultPath: 'cycle_tracker_backup.json',
+    defaultPath: 'period_tracker_backup.json',
     filters: [{ name: 'JSON', extensions: ['json'] }],
   });
   if (!path) return;

@@ -1,9 +1,9 @@
-# flatpak/io.github.el3ctricfx.cycletracker.yml
-app-id: io.github.el3ctricfx.cycletracker
+# flatpak/io.github.el3ctricfx.periodtracker.yml
+app-id: io.github.el3ctricfx.periodtracker
 runtime: org.gnome.Platform
 runtime-version: '48'
 sdk: org.gnome.Sdk
-command: cycle-tracker
+command: period-tracker
 
 finish-args:
   - --share=ipc
@@ -28,15 +28,15 @@ modules:
         path: patchelf-0.18.0.tar.bz2
         strip-components: 1
 
-  - name: cycle-tracker
+  - name: period-tracker
     buildsystem: simple
     build-commands:
-      - ar x cycle-tracker_0.1.0_amd64.deb
+      - ar x period-tracker_0.1.0_amd64.deb
       - tar -xf data.tar.* -C /app
 
-      - patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 /app/usr/bin/cycle-tracker
-      - patchelf --remove-rpath /app/usr/bin/cycle-tracker
-      - install -Dm755 /app/usr/bin/cycle-tracker /app/bin/cycle-tracker
+      - patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 /app/usr/bin/period-tracker
+      - patchelf --remove-rpath /app/usr/bin/period-tracker
+      - install -Dm755 /app/usr/bin/period-tracker /app/bin/period-tracker
 
       - |
         for dir in /app/usr/share/icons/hicolor/*/apps; do
@@ -44,16 +44,16 @@ modules:
           size=$(basename "$(dirname "$dir")")
           for f in "$dir"/*.png; do
             [ -f "$f" ] || continue
-            install -Dm644 "$f" "/app/share/icons/hicolor/${size}/apps/io.github.el3ctricfx.cycletracker.png"
+            install -Dm644 "$f" "/app/share/icons/hicolor/${size}/apps/io.github.el3ctricfx.periodtracker.png"
           done
         done
 
       - |
-        sed -e 's|^Exec=.*|Exec=cycle-tracker|' \
-            -e 's|^Icon=.*|Icon=io.github.el3ctricfx.cycletracker|' \
-            /app/usr/share/applications/cycle-tracker.desktop \
-            > /tmp/cycle-tracker.desktop
-        install -Dm644 /tmp/cycle-tracker.desktop /app/share/applications/io.github.el3ctricfx.cycletracker.desktop
+        sed -e 's|^Exec=.*|Exec=period-tracker|' \
+            -e 's|^Icon=.*|Icon=io.github.el3ctricfx.periodtracker|' \
+            /app/usr/share/applications/period-tracker.desktop \
+            > /tmp/period-tracker.desktop
+        install -Dm644 /tmp/period-tracker.desktop /app/share/applications/io.github.el3ctricfx.periodtracker.desktop
     sources:
       - type: file
-        path: ../src-tauri/target/release/bundle/deb/cycle-tracker_0.1.0_amd64.deb
+        path: ../src-tauri/target/release/bundle/deb/period-tracker_0.1.0_amd64.deb
