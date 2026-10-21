@@ -36,7 +36,7 @@ fi
 
 OLD=$(grep -m1 '"version"' package.json | sed -E 's/.*"version": *"([^"]+)".*/\1/')
 
-PRODUCT=$(node -p "require('./src-tauri/tauri.conf.json').mainBinaryName || require('./src-tauri/tauri.conf.json').productName")
+PRODUCT=$(node -p "require('./src-tauri/tauri.conf.json').productName")
 if [ -z "$PRODUCT" ]; then
   echo "error: could not read mainBinaryName or productName from src-tauri/tauri.conf.json"
   exit 1
