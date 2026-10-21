@@ -1,5 +1,7 @@
 # Cycle Tracker – a friendly period companion
 
+[![Built with AI](https://img.shields.io/badge/Vibe%20coded%20with-AI-blueviolet)](https://github.com/El3ctricFX/Period-Tracker-App)
+
 Hi there 👋  
 I’m just a random guy who built this for a friend (with a little help from AI).  
 It’s **not medical advice**, and bodies are beautifully unpredictable – but this tool can help you spot patterns and make better predictions over time.
