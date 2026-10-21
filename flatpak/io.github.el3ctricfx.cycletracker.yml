@@ -1,0 +1,59 @@
+# flatpak/io.github.el3ctricfx.cycletracker.yml
+app-id: io.github.el3ctricfx.cycletracker
+runtime: org.gnome.Platform
+runtime-version: '48'
+sdk: org.gnome.Sdk
+command: cycle-tracker
+
+finish-args:
+  - --share=ipc
+  - --socket=x11
+  - --socket=wayland
+  - --device=dri
+  - --filesystem=home
+  - --talk-name=org.freedesktop.portal.*
+  - --env=WEBKIT_DISABLE_DMABUF_RENDERER=1
+  - --env=WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS=1
+  - --env=GDK_BACKEND=x11
+
+modules:
+  - name: patchelf
+    buildsystem: simple
+    build-commands:
+      - ./configure --prefix=/app
+      - make -j$FLATPAK_BUILDER_N_JOBS
+      - make install
+    sources:
+      - type: archive
+        path: patchelf-0.18.0.tar.bz2
+        strip-components: 1
+
+  - name: cycle-tracker
+    buildsystem: simple
+    build-commands:
+      - ar x cycle-tracker_0.1.0_amd64.deb
+      - tar -xf data.tar.* -C /app
+
+      - patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 /app/usr/bin/cycle-tracker
+      - patchelf --remove-rpath /app/usr/bin/cycle-tracker
+      - install -Dm755 /app/usr/bin/cycle-tracker /app/bin/cycle-tracker
+
+      - |
+        for dir in /app/usr/share/icons/hicolor/*/apps; do
+          [ -d "$dir" ] || continue
+          size=$(basename "$(dirname "$dir")")
+          for f in "$dir"/*.png; do
+            [ -f "$f" ] || continue
+            install -Dm644 "$f" "/app/share/icons/hicolor/${size}/apps/io.github.el3ctricfx.cycletracker.png"
+          done
+        done
+
+      - |
+        sed -e 's|^Exec=.*|Exec=cycle-tracker|' \
+            -e 's|^Icon=.*|Icon=io.github.el3ctricfx.cycletracker|' \
+            /app/usr/share/applications/cycle-tracker.desktop \
+            > /tmp/cycle-tracker.desktop
+        install -Dm644 /tmp/cycle-tracker.desktop /app/share/applications/io.github.el3ctricfx.cycletracker.desktop
+    sources:
+      - type: file
+        path: ../src-tauri/target/release/bundle/deb/cycle-tracker_0.1.0_amd64.deb

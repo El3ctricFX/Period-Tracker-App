@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="/src/styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cycle Tracker</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%232d2f45' stroke='%23ff6f91' stroke-width='2'/%3E%3Cpath fill='%23ffdfc4' d='M60,30 A25,25 0 1,1 35,75 A30,30 0 1,0 60,30Z'/%3E%3C/svg%3E">
+    <script type="module" src="/src/main.ts" defer></script>
+  </head>
+
+  <body>
+    <div class="app-wrapper">
+      <div class="top-bar">
+        <div class="logo-area"><div class="logo-icon">🌙</div><div class="logo-text">Cycle Tracker</div></div>
+        <div class="nav-links">
+          <button class="nav-btn active" onclick="switchView('dashboard')">Dashboard</button>
+          <button class="nav-btn" onclick="switchView('calendar')">Calendar</button>
+          <button class="nav-btn" onclick="switchView('information')">Information</button>
+        </div>
+        <div class="stats-mini">
+          <div class="stat-badge"><span>Avg cycle</span><span id="avgCycle">--</span></div>
+          <div class="stat-badge"><span>Period length</span><span id="avgDuration">--</span></div>
+        </div>
+
+        <div class="tool-group">
+          <button class="icon-btn" onclick="loadDemo()" style="border-color: #ffb347; color: #ffb347;">✨ Demo</button>
+          <button class="icon-btn" onclick="exportData()">📎 Export</button>
+          <button class="icon-btn" id="importBtnTrigger">📂 Import</button>
+
+          <button class="icon-btn icon-only" id="themeBtn" onclick="toggleTheme()" title="Toggle Theme">☀️</button>
+          <button class="icon-btn icon-only" onclick="printSummary()" title="Print Summary">📄</button>
+          <button class="icon-btn icon-only" onclick="clearAllData()" title="Reset All">⟳</button>
+          <div id="devZone" class="icon-btn icon-only" title="Developer JSON Tools">🖥️</div>
+        </div>
+      </div>
+
+      <div id="view-dashboard" class="view-pane active">
+        <div class="grid-2col">
+          <div class="hero-card">
+            <div class="phase-top">
+              <div class="phase-ring" id="phaseIcon" style="--phase-glow: var(--phase-color)">☾</div>
+              <div class="phase-title">
+                <div class="marker-chip" id="hormoneMarker" style="--phase-glow: var(--phase-color)" onclick="toggleInsights()">ⓘ System Info</div>
+                <h2 id="countdownDisplay">Ready</h2>
+                <div class="phase-sub" id="phaseName">Awaiting entry</div>
+              </div>
+            </div>
+            <div class="predict-row">
+              <div class="pred-item"><div class="pred-label-sm" id="startPredLabel">Next start</div><div class="pred-date-lg" id="nextPeriodDate">—</div></div>
+              <div class="pred-item"><div class="pred-label-sm" id="endPredLabel">Est. end</div><div class="pred-date-lg" id="nextEndDate">—</div></div>
+            </div>
+            <div id="predictionMeta" class="prediction-meta"></div>
+            <div class="timeline-strip"><div class="timeline-flex" id="phaseTimeline"></div></div>
+          </div>
+          <div class="log-card">
+            <div class="form-group"><label>📅 Cycle start date</label><input type="date" id="startInput"></div>
+            <div class="form-group"><label>🔚 End date (optional)</label><input type="date" id="endInput"></div>
+            <button class="btn-primary" onclick="logEntry()">➕ Add / update cycle</button>
+            <button id="updateBtn" class="btn-secondary" style="display:none;" onclick="updateLatest()">✖ End current period</button>
+          </div>
+        </div>
+        <div id="insightCard" style="display:none;" class="insight-glass">
+          <div class="insight-header">
+            <h3 style="margin:0;">✨ Cycle Phase Insights</h3>
+            <button onclick="closeInsights()" style="background:none; border:1px solid #5e6d92; border-radius:30px; padding:6px 16px; color:white;">Close</button>
+          </div>
+          <div id="allPhasesContainer" class="phases-grid"></div>
+        </div>
+        <div class="history-wrapper">
+          <div class="pred-label-sm" style="margin-bottom:12px;">📋 Cycle history</div>
+          <table class="history-table">
+            <thead><tr><th>Date range</th><th>Days</th><th>Status</th><th></th></tr></thead>
+            <tbody id="historyLog"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="view-calendar" class="view-pane">
+        <div class="calendar-actions">
+          <h2 style="font-weight:600;">🗓️ Yearly heatmap</h2>
+          <select id="yearSelect" class="year-picker" onchange="renderCalendar()"></select>
+        </div>
+        <div class="mob-cal-nav">
+          <button class="mob-nav-btn" onclick="shiftMonth(-1)">‹</button>
+          <span class="mob-cal-title" id="mobCalTitle"></span>
+          <button class="mob-nav-btn" onclick="shiftMonth(1)">›</button>
+        </div>
+        <div class="mob-cal-grid" id="mobCalGrid"></div>
+        <div class="calendar-grid-modern"><div class="cal-grid" id="calendarGrid"></div></div>
+        <p id="calendarHint" style="font-size:0.7rem; color:#a3b3d9; margin-top:20px; text-align:center;">
+          ✨ <strong>Tap any day:</strong> extend or shorten active period (freely adjust both directions).<br>
+          🔁 <strong>Tap the last tracked day again</strong> → toggle end date (finish / reactivate).<br>
+          🗑️ <strong>Tap the start date</strong> → delete entire period.<br>
+          🔄 <strong>Tap an end date</strong> → remove the end date (period becomes active again).<br>
+          🟡 <strong>Gold border</strong> = last tracked day (tap to end/undo).<br>
+          💖 <strong>Pulsing glow</strong> = start date of active period.
+        </p>
+      </div>
+
+      <div id="view-information" class="view-pane">
+        <div class="edu-container-full">
+          <h1 style="font-size:2.2rem; margin-bottom:12px;">How the Cycle Works</h1>
+          <div class="disclaimer"><strong>⚠️ Heads up before you read:</strong> I'm not a doctor, nurse, or anything close — just a guy who built this for a friend. The information in this app was researched and written with the help of AI, then reviewed and approved by female friends who confirmed it felt accurate and useful. That said, it's still a starting point, not medical advice. Bodies vary, cycles vary, and if something feels off or you have real concerns, please look it up from proper sources or talk to an actual healthcare provider. Don't take a random guy's AI-assisted app as the final word.</div>
+          <p class="edu-intro" style="margin-bottom:30px;">Whether it's happening to your body or you just want to understand what someone else is going through, the menstrual cycle doesn't have to be a mystery. Think of it as a monthly loop where the body prepares itself in case a pregnancy happens, then resets when it doesn't. The "average" cycle is 28 days, but anywhere from 21 to 35 days is completely normal — and your own cycle may vary month to month. Here is exactly what is happening during that loop.</p>
+
+          <div class="edu-card-full" style="border-left-color: #ff4d7a;">
+            <div class="edu-toggle-btn" onclick="toggleEduCard(this)">
+              <h2>☾ Phase 1: The Period (Menstruation)</h2>
+              <span class="edu-chevron collapsed">▾</span>
+            </div>
+            <div class="edu-body collapsed">
+              <div class="edu-meta">Usually Days 1–7 (average 3–5 days, but 2–7 is normal)</div>
+              <div class="edu-text">
+                <p><strong>What's happening:</strong> The body has confirmed there's no pregnancy this month, so the thick uterine lining it built up is no longer needed. The body sheds that lining, which exits as bleeding. This marks Day 1 of a new cycle — it's the reset button.</p>
+                <p><strong>How it feels:</strong> The uterus contracts to push out the lining, which causes cramping — anywhere from mild to quite intense. Lower back pain, fatigue, bloating, and food cravings are all common. Energy is usually at its lowest point. This is genuinely a good time to slow down and rest.</p>
+                <p><strong>What's normal:</strong> Flow can range from light spotting to heavy bleeding, and it often changes day to day within the same period. Passing small clots is common. If bleeding is consistently soaking through a pad or tampon every hour for several hours, that's worth mentioning to a doctor.</p>
+                <p><strong>🍽️ Foods that tend to help:</strong> Iron-rich foods like red meat, spinach, lentils, and tofu help replace what's lost through bleeding — pairing them with vitamin C (like lemon juice or bell peppers) helps your body absorb the iron better. Magnesium-rich foods like dark chocolate, bananas, nuts, and seeds can ease cramping. Ginger and turmeric are natural anti-inflammatories that may take the edge off cramps and bloating. Staying well hydrated and reducing salt can help with water retention. Cravings are real and make sense — your body is working hard, so don't stress about them.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="edu-card-full" style="border-left-color: #00b4ff;">
+            <div class="edu-toggle-btn" onclick="toggleEduCard(this)">
+              <h2>☽ Phase 2: The Rebuild (Follicular)</h2>
+              <span class="edu-chevron collapsed">▾</span>
+            </div>
+            <div class="edu-body collapsed">
+              <div class="edu-meta">Usually Days 1–13 (overlaps with the period)</div>
+              <div class="edu-text">
+                <p><strong>What's happening:</strong> While the period is still wrapping up, the brain is already sending signals to the ovaries to start developing a new egg for this month. Several follicles (small fluid-filled sacs, each containing an egg) begin to grow, and the body starts rebuilding the uterine lining. Eventually one dominant follicle wins out and continues to mature.</p>
+                <p><strong>How it feels:</strong> Rising estrogen is doing a lot of good work here. Energy climbs back up, mood tends to improve, and mental clarity returns. Most people feel noticeably more social, motivated, and optimistic during this phase. Skin often looks clearer too, as estrogen supports collagen production.</p>
+                <p><strong>What to know:</strong> This phase is the most variable in length — it's the main reason cycles differ from person to person and month to month. A "short" cycle usually means a short follicular phase; a "long" one means this phase ran longer than usual.</p>
+                <p><strong>🍽️ Foods that tend to help:</strong> This is a good phase for lighter, fresh foods — your digestion tends to be more efficient and your body responds well to variety. Fermented foods like yogurt, kefir, kimchi, and sauerkraut support gut health and help the body metabolize estrogen properly. Zinc-rich foods like pumpkin seeds, chickpeas, and eggs support healthy follicle development. Leafy greens, berries, and whole grains give steady energy without spikes. Generally a great time to eat well since you'll actually feel like it.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="edu-card-full" style="border-left-color: #2affb6;">
+            <div class="edu-toggle-btn" onclick="toggleEduCard(this)">
+              <h2>○ Phase 3: The Main Event (Ovulation)</h2>
+              <span class="edu-chevron collapsed">▾</span>
+            </div>
+            <div class="edu-body collapsed">
+              <div class="edu-meta">Usually around Day 14, but varies with cycle length</div>
+              <div class="edu-text">
+                <p><strong>What's happening:</strong> A surge of luteinizing hormone (LH) triggers the dominant follicle to release its egg. The egg travels down the fallopian tube toward the uterus. The egg itself only survives 12–24 hours — but sperm can survive inside the body for up to 5 days. This means the actual fertile window is about 6 days: the 5 days before ovulation and the day of.</p>
+                <p><strong>How it feels:</strong> Energy and confidence usually peak around ovulation. Some people notice a one-sided twinge or mild cramp (called mittelschmerz) when the egg is released. Vaginal discharge often becomes clearer, stretchier, and more slippery around this time — similar to raw egg whites — which is a natural sign of peak fertility.</p>
+                <p><strong>What to know:</strong> Ovulation doesn't always happen on Day 14 — that's just the average for a 28-day cycle. If your cycle runs longer or shorter, ovulation shifts accordingly. Stress, illness, and significant weight changes can delay or skip ovulation entirely.</p>
+                <p><strong>🍽️ Foods that tend to help:</strong> Antioxidant-rich foods are your best friend here — berries, leafy greens, and colorful vegetables help protect the egg and support the LH surge. Fiber from foods like flaxseed, oats, and broccoli helps the body clear out excess estrogen so it doesn't recirculate. Light proteins like salmon, eggs, and legumes support hormone production. Since energy is high, this is a natural time to enjoy bigger or more varied meals without feeling sluggish.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="edu-card-full" style="border-left-color: #b77cff;">
+            <div class="edu-toggle-btn" onclick="toggleEduCard(this)">
+              <h2>◑ Phase 4: The Wind-Down (Luteal)</h2>
+              <span class="edu-chevron collapsed">▾</span>
+            </div>
+            <div class="edu-body collapsed">
+              <div class="edu-meta">Usually Days 15–28 (typically the most consistent phase at ~14 days)</div>
+              <div class="edu-text">
+                <p><strong>What's happening:</strong> After the egg is released, the empty follicle transforms into something called the corpus luteum, which produces progesterone. Progesterone keeps the uterine lining thick and ready in case a fertilized egg needs to implant. If no pregnancy occurs, the corpus luteum breaks down, progesterone drops, and the lining starts to shed — beginning the next period.</p>
+                <p><strong>How it feels (early luteal, Days 15–21):</strong> The first half of this phase is often fine. Progesterone has a calming effect and energy is still relatively stable. Some people feel focused and productive, good for detail-oriented tasks.</p>
+                <p><strong>How it feels (late luteal / PMS, Days 22–28):</strong> As progesterone and estrogen both drop toward the end of this phase, PMS symptoms can appear — irritability, anxiety, low mood, bloating, breast tenderness, headaches, and disrupted sleep are all common. These symptoms typically show up in the last 1–2 weeks before the period and stop once it begins. If PMS is significantly affecting your daily life, it's worth talking to a doctor, as PMDD (a more severe form) is real and treatable.</p>
+                <p><strong>🍽️ Foods that tend to help:</strong> This is the phase where cravings hit hardest, and there's a real reason for it — progesterone raises your metabolic rate slightly, meaning your body is actually burning more energy. Complex carbohydrates like sweet potato, oats, brown rice, and whole grain bread help stabilize the blood sugar crashes that drive mood swings and cravings. Calcium-rich foods like dairy, fortified plant milks, almonds, and sardines are backed by research for reducing PMS symptoms. Vitamin B6 (found in chicken, bananas, and potatoes) helps with mood and water retention. Cutting back on caffeine and alcohol in this phase genuinely helps — both worsen anxiety, disrupt sleep, and amplify PMS symptoms. Don't fight the cravings too hard; work with them where you can.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="printSummary"></div>
+    <div id="jsonTerminal" class="terminal-panel">
+      <h3 style="margin-bottom:20px;">📁 JSON editor</h3>
+      <textarea id="jsonArea" placeholder="Edit logs array..."></textarea>
+      <div style="display:flex; gap:12px; margin-top:24px;">
+        <button class="icon-btn" style="flex:1;" onclick="applyJson()">💾 Save</button>
+        <button class="icon-btn" style="flex:1;" onclick="toggleTerminal()">Cancel</button>
+      </div>
+    </div>
+  </body>
+</html>
