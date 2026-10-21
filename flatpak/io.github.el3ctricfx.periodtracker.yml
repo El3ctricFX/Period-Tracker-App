@@ -31,7 +31,7 @@ modules:
   - name: period-tracker
     buildsystem: simple
     build-commands:
-      - ar x period-tracker_0.1.0_amd64.deb
+      - ar x period-tracker_0.1.1_amd64.deb
       - tar -xf data.tar.* -C /app
 
       - patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 /app/usr/bin/period-tracker
@@ -56,4 +56,4 @@ modules:
         install -Dm644 /tmp/period-tracker.desktop /app/share/applications/io.github.el3ctricfx.periodtracker.desktop
     sources:
       - type: file
-        path: ../src-tauri/target/release/bundle/deb/period-tracker_0.1.0_amd64.deb
+        path: ../src-tauri/target/release/bundle/deb/period-tracker_0.1.1_amd64.deb
